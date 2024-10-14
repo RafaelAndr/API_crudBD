@@ -1,18 +1,18 @@
 from flask import Flask, request, jsonify
-import psycopg2
+import mysql.connector
 
 
 app = Flask(__name__)
 
-DB_NOME = "postgres"
-DB_USUARIO = "professor"
-DB_SENHA = "professor"
-DB_HOST = "postgre-1.cspypw1igjga.us-east-1.rds.amazonaws.com"
-DB_PORT = "5432"
+DB_NOME = "mydb"
+DB_USUARIO = "root"
+DB_SENHA = "Rafael@2003"
+DB_HOST = "localhost"
+DB_PORT = "3306"
 
 def abrirConexao():
     try:
-        conn = psycopg2.connect(
+        conn = mysql.connector.connect(
             database=DB_NOME,
             user=DB_USUARIO,
             password=DB_SENHA,
@@ -26,168 +26,245 @@ def abrirConexao():
         return None
 
 
-@app.route('/produto', methods=['POST'])
-def criar_produto():
+# CRUD para tabela de combustível
+@app.route('/combustivel', methods=['POST'])
+def criar_combustivel():
     data = request.json
-    print("Dados recebidos:", data)
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute("""
-        INSERT INTO posto.produto (id_produto, nome, descricao, tipo, preco_final, estoque_id_estoque) 
+        cur.execute(""" 
+        INSERT INTO combustivel (id_combustivel, nome, tipo, preco_litro, data_ajuste_preco, reservatorio_id_reservatorio) 
         VALUES (%s, %s, %s, %s, %s, %s)
-        """, (data['id_produto'], data['nome'], data['descricao'], data['tipo'], data['preco_final'], data['estoque_id_estoque']))
+        """, (data['id_combustivel'], data['nome'], data['tipo'], data['preco_litro'], data['data_ajuste_preco'], data['reservatorio_id_reservatorio']))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao criar produto.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao criar combustível.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'id': data['id_produto']}), 201
+    return jsonify({'id': data['id_combustivel']}), 201
 
-@app.route('/produto', methods=['GET'])
-def leitura_produtos():
+@app.route('/combustivel', methods=['GET'])
+def leitura_combustivel():
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute('SELECT * FROM posto.produto;')
-        produtos = cur.fetchall()
+        cur.execute('SELECT * FROM combustivel;')
+        combustiveis = cur.fetchall()
     except Exception as e:
-        return jsonify({'message': 'Erro ao obter produtos.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao obter combustíveis.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify(produtos)
+    return jsonify(combustiveis)
 
-@app.route('/produto/<int:id>', methods=['PUT'])
-def atualizar_produto(id):
+@app.route('/combustivel/<int:id>', methods=['PUT'])
+def atualizar_combustivel(id):
     data = request.json
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute("""
-        UPDATE posto.produto SET nome = %s WHERE id_produto = %s
-        """, (data['nome'], id))
+        cur.execute(""" 
+        UPDATE combustivel SET nome = %s, tipo = %s, preco_litro = %s, data_ajuste_preco = %s, reservatorio_id_reservatorio = %s 
+        WHERE id_combustivel = %s
+        """, (data['nome'], data['tipo'], data['preco_litro'], data['data_ajuste_preco'], data['reservatorio_id_reservatorio'], id))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao atualizar produto.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao atualizar combustível.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'message': 'Produto atualizado com sucesso.'})
+    return jsonify({'message': 'Combustível atualizado com sucesso.'})
 
-@app.route('/produto/<int:id>', methods=['DELETE'])
-def deletar_produto(id):
+@app.route('/combustivel/<int:id>', methods=['DELETE'])
+def deletar_combustivel(id):
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute('DELETE FROM posto.produto WHERE id_produto = %s;', (id,))
+        cur.execute('DELETE FROM combustivel WHERE id_combustivel = %s;', (id,))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao deletar produto.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao deletar combustível.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'message': 'Produto deletado com sucesso.'})
+    return jsonify({'message': 'Combustível deletado com sucesso.'})
 
-
-# CRUD para tabela de estoque (similar ao produto)
-@app.route('/estoque', methods=['POST'])
-def criar_estoque():
+# CRUD para tabela de bomba
+@app.route('/bomba', methods=['POST'])
+def criar_bomba():
     data = request.json
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute("""
-        INSERT INTO posto.estoque (id_estoque, quantidade_disponivel) 
-        VALUES (%s, %s)
-        """, (data['id_estoque'], data['quantidade_disponivel']))
+        cur.execute(""" 
+        INSERT INTO bomba (id_bomba, volume_distribuido, data_proxima_manutenca, data_ultima_manutencao) 
+        VALUES (%s, %s, %s, %s)
+        """, (data['id_bomba'], data['volume_distribuido'], data['data_proxima_manutenca'], data['data_ultima_manutencao']))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao criar estoque.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao criar bomba.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'id': data['id_estoque']}), 201
+    return jsonify({'id': data['id_bomba']}), 201
 
-@app.route('/estoque', methods=['GET'])
-def leitura_estoque():
+@app.route('/bomba', methods=['GET'])
+def leitura_bombas():
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute('SELECT * FROM posto.estoque;')
-        estoques = cur.fetchall()
+        cur.execute('SELECT * FROM bomba;')
+        bombas = cur.fetchall()
     except Exception as e:
-        return jsonify({'message': 'Erro ao obter estoques.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao obter bombas.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify(estoques)
+    return jsonify(bombas)
 
-@app.route('/estoque/<int:id>', methods=['PUT'])
-def atualizar_estoque(id):
+@app.route('/bomba/<int:id>', methods=['PUT'])
+def atualizar_bomba(id):
     data = request.json
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute("""
-        UPDATE posto.estoque SET quantidade_disponivel = %s WHERE id_estoque = %s
-        """, (data['quantidade_disponivel'], id))
+        cur.execute(""" 
+        UPDATE bomba SET volume_distribuido = %s, data_proxima_manutenca = %s, data_ultima_manutencao = %s 
+        WHERE id_bomba = %s
+        """, (data['volume_distribuido'], data['data_proxima_manutenca'], data['data_ultima_manutencao'], id))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao atualizar estoque.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao atualizar bomba.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'message': 'Estoque atualizado com sucesso.'})
+    return jsonify({'message': 'Bomba atualizada com sucesso.'})
 
-@app.route('/estoque/<int:id>', methods=['DELETE'])
-def deletar_estoque(id):
+@app.route('/bomba/<int:id>', methods=['DELETE'])
+def deletar_bomba(id):
     conn = abrirConexao()
     if conn is None:
         return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
     cur = conn.cursor()
     try:
-        cur.execute('DELETE FROM posto.estoque WHERE id_estoque = %s;', (id,))
+        cur.execute('DELETE FROM bomba WHERE id_bomba = %s;', (id,))
         conn.commit()
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': 'Erro ao deletar estoque.', 'error': str(e)}), 500
+        return jsonify({'message': 'Erro ao deletar bomba.', 'error': str(e)}), 500
     finally:
         cur.close()
         conn.close()
 
-    return jsonify({'message': 'Estoque deletado com sucesso.'})
+    return jsonify({'message': 'Bomba deletada com sucesso.'})
 
-# Terceira tabela (relacionamento/compra, etc.)
-# Adicione aqui conforme a necessidade
+# CRUD para tabela de abastece
+@app.route('/abastece', methods=['POST'])
+def criar_abastece():
+    data = request.json
+    conn = abrirConexao()
+    if conn is None:
+        return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
+    cur = conn.cursor()
+    try:
+        cur.execute(""" 
+        INSERT INTO abastece (combustivel_id_combustivel, bomba_id_bomba, status, data_abastecimento, id_abastece) 
+        VALUES (%s, %s, %s, %s, %s)
+        """, (data['combustivel_id_combustivel'], data['bomba_id_bomba'], data['status'], data['data_abastecimento'], data['id_abastece']))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': 'Erro ao criar abastece.', 'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 
+    return jsonify({'id': data['id_abastece']}), 201
+
+@app.route('/abastece', methods=['GET'])
+def leitura_abastece():
+    conn = abrirConexao()
+    if conn is None:
+        return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT * FROM abastece;')
+        abastecimentos = cur.fetchall()
+    except Exception as e:
+        return jsonify({'message': 'Erro ao obter abastecimentos.', 'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+    return jsonify(abastecimentos)
+
+@app.route('/abastece/<string:id>', methods=['PUT'])
+def atualizar_abastece(id):
+    data = request.json
+    conn = abrirConexao()
+    if conn is None:
+        return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
+    cur = conn.cursor()
+    try:
+        cur.execute(""" 
+        UPDATE abastece SET combustivel_id_combustivel = %s, bomba_id_bomba = %s, status = %s, data_abastecimento = %s 
+        WHERE id_abastece = %s
+        """, (data['combustivel_id_combustivel'], data['bomba_id_bomba'], data['status'], data['data_abastecimento'], id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': 'Erro ao atualizar abastece.', 'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+    return jsonify({'message': 'Abastece atualizado com sucesso.'})
+
+@app.route('/abastece/<string:id>', methods=['DELETE'])
+def deletar_abastece(id):
+    conn = abrirConexao()
+    if conn is None:
+        return jsonify({'message': 'Erro ao conectar com o banco de dados.'}), 500
+    cur = conn.cursor()
+    try:
+        cur.execute('DELETE FROM abastece WHERE id_abastece = %s;', (id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': 'Erro ao deletar abastece.', 'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+    return jsonify({'message': 'Abastece deletado com sucesso.'})
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=3000)
+    app.run(debug=True)

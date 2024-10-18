@@ -36,7 +36,7 @@ def criar_combustivel():
     cur = conn.cursor()
     try:
         cur.execute(""" 
-        INSERT INTO combustivel (id_combustivel, nome, tipo, preco_litro, data_ajuste_preco, reservatorio_id_reservatorio) 
+        INSERT INTO mydb.combustivel (id_combustivel, nome, tipo, preco_litro, data_ajuste_preco, reservatorio_id_reservatorio) 
         VALUES (%s, %s, %s, %s, %s, %s)
         """, (data['id_combustivel'], data['nome'], data['tipo'], data['preco_litro'], data['data_ajuste_preco'], data['reservatorio_id_reservatorio']))
         conn.commit()
@@ -116,7 +116,7 @@ def criar_bomba():
     cur = conn.cursor()
     try:
         cur.execute(""" 
-        INSERT INTO bomba (id_bomba, volume_distribuido, data_proxima_manutenca, data_ultima_manutencao) 
+        INSERT INTO mydb.bomba (id_bomba, volume_distribuido, data_proxima_manutenca, data_ultima_manutencao) 
         VALUES (%s, %s, %s, %s)
         """, (data['id_bomba'], data['volume_distribuido'], data['data_proxima_manutenca'], data['data_ultima_manutencao']))
         conn.commit()
